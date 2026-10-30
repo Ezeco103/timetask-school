@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>TimeTask School</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        .task-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            width: fit-content;
+        }
+
+        .btn-complete {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>TimeTask School 🚀</h1>
+    <a href="/add">+ Agregar nueva tarea</a>
+
+    <hr>
+
+    <h3>Mis tareas pendientes:</h3>
+    <ul>
+        {% for task in tasks %}
+        <li class="task-item">
+            <strong>{{ task.title }}</strong> |
+            Plazo: {{ task.deadline }} |
+            Tiempo: {{ task.estimated_time }} min |
+            <strong>Prioridad: {{ task.priority }}</strong>
+
+            <!-- Botones de acción bien definidos -->
+            <a href="/complete/{{ task.id }}" class="btn-complete">Completar ✅</a>
+            <a href="/delete/{{ task.id }}" class="btn-delete">Eliminar ❌</a>
+        </li>
+        {% else %}
+        <li>No hay tareas registradas todavía. ¡Buen trabajo! 🎉</li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

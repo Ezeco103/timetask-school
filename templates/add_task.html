@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Tarea - TimeTask School</title>
+</head>
+
+<body>
+    <h1>Agregar Nueva Tarea 📝</h1>
+
+    <form action="/add" method="POST">
+        <label for="title">Título de la tarea:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="deadline">Fecha límite (Modelo: AAAA-MM-DD):</label><br>
+        <input type="text" id="deadline" name="deadline" placeholder="AAAA-MM-DD" pattern="\d{4}-\d{2}-\d{2}"
+            title="Debes ingresar la fecha exactamente en el modelo AAAA-MM-DD (Ejemplo: 2026-11-15)" required><br><br>
+
+        <label for="estimated_time">Tiempo estimado (en minutos):</label><br>
+        <input type="number" id="estimated_time" name="estimated_time" required><br><br>
+
+        <button type="submit">Guardar Tarea</button>
+    </form>
+
+    <br>
+    <a href="/">Volver al inicio</a>
+</body>
+
+</html>
