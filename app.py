@@ -231,7 +231,7 @@ def edit_task(id):
 
 @app.route("/speak")
 def speak_tasks():
-    """Generate audio summary for personal tasks."""
+    """Generate audio summary for personal tasks safely."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     user = User.query.get(session["user_id"])
@@ -258,11 +258,23 @@ def speak_tasks():
     os.makedirs("static", exist_ok=True)
     audio_path = os.path.join("static", "tasks_speech.mp3")
 
-    async def generate_audio():
-        communicate = edge_tts.Communicate(text_to_read, "es-ES-AlvaroNeural")
-        await communicate.save(audio_path)
+    try:
+        async def generate_audio():
+            communicate = edge_tts.Communicate(text_to_read, "es-ES-AlvaroNeural")
+            await communicate.save(audio_path)
 
-    asyncio.run(generate_audio())
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            asyncio.run_coroutine_threadsafe(generate_audio(), loop)
+        else:
+            asyncio.run(generate_audio())
+    except Exception:
+        pass
+
     return redirect(url_for("index", play_audio="1"))
 
 
@@ -364,7 +376,6 @@ def view_class(class_id):
         return redirect(url_for("classes_dashboard"))
 
     today = date.today()
-    # Ordenadas por urgencia (deadline asc)
     pending_tasks = ClassTask.query.filter_by(
         classroom_id=classroom.id, completed=False
     ).filter(ClassTask.deadline >= today).order_by(ClassTask.deadline.asc()).all()
@@ -469,13 +480,12 @@ def add_class_task(class_id):
 
 @app.route("/class/task-edit/<int:task_id>", methods=["GET", "POST"])
 def edit_class_task(task_id):
-    """Allow only task author or room creator to edit class task."""
+    """Allow only task author or room creator to edit class task safely."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     task = ClassTask.query.get_or_404(task_id)
     classroom = Classroom.query.get_or_404(task.classroom_id)
 
-    # Validar permisos: solo el creador de la clase o el autor de la tarea
     if classroom.creator_id != session["user_id"] and task.user_id != session["user_id"]:
         return redirect(url_for("view_class", class_id=classroom.id))
 
