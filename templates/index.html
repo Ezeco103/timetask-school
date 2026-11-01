@@ -3,64 +3,511 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>TimeTask School</title>
+    <title>TimeTask School 🚀</title>
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --border-color: #e5e7eb;
+            --task-bg: #fdfdfd;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --purple-hover: #7c3aed;
+        }
+
+        /* Variables para el Modo Oscuro */
+        .dark-mode {
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --text-main: #f9fafb;
+            --border-color: #374151;
+            --task-bg: #111827;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: background 0.3s;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 26px;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* Barra de Progreso */
+        .progress-container {
+            background: var(--border-color);
+            border-radius: 10px;
+            height: 14px;
+            width: 100%;
+            margin: 15px 0 5px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--success);
+            height: 100%;
+
+            width: {
+                    {
+                    progress_percentage
+                }
+            }
+
+            %;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Controles y Buscador */
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 5px;
+            flex-grow: 1;
+        }
+
+        .search-box input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-voice {
+            background-color: #0ea5e9;
+        }
+
+        .btn-voice:hover {
+            background-color: #0284c7;
+        }
+
+        .btn-classes {
+            background-color: var(--purple);
+        }
+
+        .btn-classes:hover {
+            background-color: var(--purple-hover);
+        }
+
+        .btn-dark {
+            background-color: #374151;
+        }
+
+        .btn-dark:hover {
+            background-color: #1f2937;
+        }
+
+        .btn-logout {
+            background-color: #6b7280;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .btn-logout:hover {
+            background-color: #4b5563;
+        }
+
+        .filter-btn {
+            background-color: var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
         }
 
         .task-item {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            width: fit-content;
+            background: var(--task-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .task-item-today {
+            background: rgba(239, 68, 68, 0.05);
+            border: 2px solid #ef4444;
+            animation: pulse-box 1.5s infinite;
+        }
+
+        @keyframes pulse-box {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .task-item-expired {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid #f87171;
+            opacity: 0.85;
+        }
+
+        .task-item-completed {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid #86efac;
+            opacity: 0.8;
+        }
+
+        .task-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge-subject {
+            color: #4f46e5;
+            font-weight: bold;
+            background: rgba(79, 70, 229, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-alta {
+            color: #dc2626;
+            font-weight: bold;
+            background: #fee2e2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-media {
+            color: #d97706;
+            font-weight: bold;
+            background: #fef3c7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-baja {
+            color: #059669;
+            font-weight: bold;
+            background: #d1fae5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-today-text {
+            color: #b91c1c;
+            font-weight: bold;
+            font-size: 13px;
         }
 
         .btn-complete {
-            background-color: #28a745;
+            background-color: var(--success);
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .btn-complete:hover {
+            background-color: #059669;
+        }
+
+        .btn-edit {
+            background-color: var(--warning);
+            font-size: 12px;
+            padding: 6px 12px;
             color: white;
-            padding: 4px 8px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-left: 10px;
+        }
+
+        .btn-edit:hover {
+            background-color: #d97706;
         }
 
         .btn-delete {
-            background-color: #dc3545;
-            color: white;
-            padding: 4px 8px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-left: 5px;
+            background-color: var(--danger);
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+
+        .empty-state {
+            color: #6b7280;
+            font-style: italic;
+            font-size: 14px;
+            padding: 5px 0;
         }
     </style>
 </head>
 
 <body>
-    <h1>TimeTask School 🚀</h1>
-    <a href="/add">+ Agregar nueva tarea</a>
+    <div class="container">
+        <div class="header-flex">
+            <h1>TimeTask School 🚀</h1>
+            <button onclick="toggleDarkMode()" class="btn btn-dark" id="dark-mode-btn">🌙 Modo Oscuro</button>
+        </div>
+        <div class="welcome-text">
+            👋 Bienvenido, <strong>{{ user.username }}</strong> | <a href="/logout" class="btn btn-logout">Cambiar
+                usuario</a>
+        </div>
 
-    <hr>
+        <!-- Barra de Progreso Visual -->
+        <div class="progress-text">Progreso general: {{ total_completed }} de {{ total_tasks }} tareas completadas ({{
+            progress_percentage }}%)</div>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
 
-    <h3>Mis tareas pendientes:</h3>
-    <ul>
-        {% for task in tasks %}
-        <li class="task-item">
-            <strong>{{ task.title }}</strong> |
-            Plazo: {{ task.deadline }} |
-            Tiempo: {{ task.estimated_time }} min |
-            <strong>Prioridad: {{ task.priority }}</strong>
+        <div class="actions-bar" style="margin-top: 20px;">
+            <a href="/add" class="btn">+ Agregar nueva tarea</a>
+            <a href="/classes" class="btn btn-classes">🏫 Clases Compartidas</a>
+            <a href="/speak" class="btn btn-voice">🔊 Escuchar Tareas</a>
 
-            <!-- Botones de acción bien definidos -->
-            <a href="/complete/{{ task.id }}" class="btn-complete">Completar ✅</a>
-            <a href="/delete/{{ task.id }}" class="btn-delete">Eliminar ❌</a>
-        </li>
-        {% else %}
-        <li>No hay tareas registradas todavía. ¡Buen trabajo! 🎉</li>
-        {% endfor %}
-    </ul>
+            <!-- Buscador por Título -->
+            <form action="/" method="GET" class="search-box">
+                <input type="text" name="search" placeholder="Buscar tarea..." value="{{ search_query }}">
+                <button type="submit" class="btn">🔍</button>
+            </form>
+        </div>
+
+        {% if request.args.get('play_audio') == '1' %}
+        <audio autoplay style="display:none;">
+            <source src="{{ url_for('static', filename='tasks_speech.mp3') }}" type="audio/mpeg">
+        </audio>
+        {% endif %}
+
+        <div class="filter-bar">
+            <span>Prioridad:</span>
+            <a href="/" class="filter-btn {% if not current_filter %}active{% endif %}">Todas</a>
+            <a href="/?priority=Alta{% if search_query %}&search={{ search_query }}{% endif %}"
+                class="filter-btn {% if current_filter == 'Alta' %}active{% endif %}">Alta</a>
+            <a href="/?priority=Media{% if search_query %}&search={{ search_query }}{% endif %}"
+                class="filter-btn {% if current_filter == 'Media' %}active{% endif %}">Media</a>
+            <a href="/?priority=Baja{% if search_query %}&search={{ search_query }}{% endif %}"
+                class="filter-btn {% if current_filter == 'Baja' %}active{% endif %}">Baja</a>
+        </div>
+
+        <hr>
+
+        <!-- SECCIÓN 1: TAREAS PENDIENTES -->
+        <h3>Mis tareas pendientes:</h3>
+        <ul>
+            {% for task in tasks %}
+            <li class="task-item {% if task.deadline == today %}task-item-today{% endif %}">
+                <div class="task-info">
+                    <div>
+                        <span class="badge-subject">{{ task.subject }}</span>
+                        <strong style="margin-left: 8px;">{{ task.title }}</strong>
+                    </div>
+                    {% if task.priority == 'Alta' %}
+                    <span class="badge-alta">Alta</span>
+                    {% elif task.priority == 'Media' %}
+                    <span class="badge-media">Media</span>
+                    {% else %}
+                    <span class="badge-baja">Baja</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 14px; color: #6b7280; display: flex; align-items: center; gap: 10px;">
+                    <span>📅 Plazo: {{ task.deadline }}</span>
+                    {% if task.deadline == today %}
+                    <span class="badge-today-text">🔥 ¡Se presenta hoy!</span>
+                    {% endif %}
+                    <span>&nbsp;|&nbsp; ⏱️ {{ task.estimated_time }} min</span>
+                </div>
+                <div class="task-buttons" style="margin-top: 5px;">
+                    <a href="/complete/{{ task.id }}" class="btn btn-complete">Completado ✅</a>
+                    <a href="/edit/{{ task.id }}" class="btn btn-edit">Editar ✏️</a>
+                    <a href="/delete/{{ task.id }}" class="btn btn-delete">Eliminar ❌</a>
+                </div>
+            </li>
+            {% else %}
+            <li class="empty-state">No hay tareas pendientes registradas.</li>
+            {% endfor %}
+        </ul>
+
+        <!-- SECCIÓN 2: TAREAS VENCIDAS -->
+        <h3 style="color: #dc2626;">Tareas vencidas (Sin completar):</h3>
+        <ul>
+            {% for task in expired_tasks %}
+            <li class="task-item task-item-expired">
+                <div class="task-info">
+                    <div>
+                        <span class="badge-subject">{{ task.subject }}</span>
+                        <strong style="text-decoration: line-through; margin-left: 8px;">{{ task.title }}</strong>
+                    </div>
+                    <span class="badge-alta">Vencida</span>
+                </div>
+                <div style="font-size: 14px; color: #b91c1c;">
+                    ⚠️ Plazo expirado: {{ task.deadline }} &nbsp;|&nbsp; ⏱️ {{ task.estimated_time }} min
+                </div>
+                <div class="task-buttons" style="margin-top: 5px;">
+                    <a href="/delete/{{ task.id }}" class="btn btn-delete">Eliminar ❌</a>
+                </div>
+            </li>
+            {% else %}
+            <li class="empty-state">¡Excelente! No tienes tareas vencidas. 🎉</li>
+            {% endfor %}
+        </ul>
+
+        <!-- SECCIÓN 3: TAREAS COMPLETADAS -->
+        <h3 style="color: #059669;">Tareas completadas:</h3>
+        <ul>
+            {% for task in completed_tasks %}
+            <li class="task-item task-item-completed">
+                <div class="task-info">
+                    <div>
+                        <span class="badge-subject">{{ task.subject }}</span>
+                        <span style="text-decoration: line-through; margin-left: 8px;"><strong>{{ task.title
+                                }}</strong></span>
+                    </div>
+                    <span style="color: #059669; font-weight: bold; font-size: 12px;">Completado ✅</span>
+                </div>
+                <div style="font-size: 14px; color: #047857;">
+                    📅 Plazo era: {{ task.deadline }} &nbsp;|&nbsp; ⏱️ {{ task.estimated_time }} min
+                </div>
+                <div class="task-buttons" style="margin-top: 5px;">
+                    <a href="/delete/{{ task.id }}" class="btn btn-delete">Eliminar ❌</a>
+                </div>
+            </li>
+            {% else %}
+            <li class="empty-state">Aún no has completado ninguna tarea.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Script para el Modo Oscuro con memoria local -->
+    <script>
+        const body = document.body;
+        const btn = document.getElementById('dark-mode-btn');
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+            btn.textContent = '☀️ Modo Claro';
+        }
+
+        function toggleDarkMode() {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                btn.textContent = '☀️ Modo Claro';
+            } else {
+                localStorage.setItem('theme', 'light');
+                btn.textContent = '🌙 Modo Oscuro';
+            }
+        }
+    </script>
 </body>
 
 </html>
