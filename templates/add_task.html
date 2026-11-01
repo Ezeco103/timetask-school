@@ -4,120 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Agregar Tarea - TimeTask School</title>
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        h1 {
-            margin-top: 0;
-            color: var(--primary);
-            font-size: 24px;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 14px;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            padding: 10px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-back {
-            background-color: #9ca3af;
-        }
-
-        .btn-back:hover {
-            background-color: #6b7280;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Agregar Nueva Tarea 📝</h1>
+    <h1>Agregar Nueva Tarea 📝</h1>
 
-        <form action="/add" method="POST">
-            <label for="subject">Materia / Asignatura:</label>
-            <input type="text" id="subject" name="subject" placeholder="Ej. Matemáticas, Física..." required>
+    <form action="/add" method="POST">
+        <label for="title">Título de la tarea:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
 
-            <label for="title">Título de la tarea:</label>
-            <input type="text" id="title" name="title" placeholder="Ej. Resolver ejercicios de álgebra" required>
+        <label for="deadline">Fecha límite (Modelo: AAAA-MM-DD):</label><br>
+        <input type="text" id="deadline" name="deadline" placeholder="AAAA-MM-DD" pattern="\d{4}-\d{2}-\d{2}"
+            title="Debes ingresar la fecha exactamente en el modelo AAAA-MM-DD (Ejemplo: 2026-11-15)" required><br><br>
 
-            <label for="deadline">Fecha límite (Modelo: AAAA-MM-DD):</label>
-            <input type="text" id="deadline" name="deadline" placeholder="2026-11-15" pattern="\d{4}-\d{2}-\d{2}"
-                required>
+        <label for="estimated_time">Tiempo estimado (en minutos):</label><br>
+        <input type="number" id="estimated_time" name="estimated_time" required><br><br>
 
-            <label for="estimated_time">Tiempo estimado (en minutos):</label>
-            <input type="number" id="estimated_time" name="estimated_time" placeholder="45" required>
+        <button type="submit">Guardar Tarea</button>
+    </form>
 
-            <div class="btn-group">
-                <button type="submit" class="btn">Guardar Tarea</button>
-                <a href="/" class="btn btn-back">Volver</a>
-            </div>
-        </form>
-    </div>
+    <br>
+    <a href="/">Volver al inicio</a>
 </body>
 
 </html>
