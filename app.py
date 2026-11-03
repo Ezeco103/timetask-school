@@ -13,12 +13,18 @@ app = Flask(__name__)
 app.secret_key = "timetask_school_final_key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///timetask.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["PERMANENT_SESSION_LIFETIME"] = 2592000
 
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
     os.makedirs("static", exist_ok=True)
+
+@app.before_request
+def make_session_permanent():
+    """Hace que la sesión sea permanente en cada petición para recordar al usuario."""
+    session.permanent = True
 
 
 def calculate_priority(estimated_time, deadline_date):
@@ -151,26 +157,35 @@ def index():
 
 @app.route("/add", methods=["GET", "POST"])
 def add_task():
-    """Handle adding a new personal task."""
+    """Añade una nueva tarea personal con validación de nombre duplicado."""
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        title = request.form["title"]
+        title = request.form["title"].strip()
         subject = request.form["subject"].strip() or "General"
         deadline_str = request.form["deadline"].strip()
         estimated_time = int(request.form["estimated_time"])
+        today = date.today()
+
+        existing_task = Task.query.filter_by(user_id=session["user_id"], title=title).first()
+        if existing_task:
+            return render_template(
+                "error.html",
+                error_message="Ya existe una tarea personal con este nombre.",
+                back_url="/add",
+            ), 400
 
         try:
             deadline_date = datetime.strptime(deadline_str, "%Y-%m-%d").date()
         except ValueError:
             return render_template(
                 "error.html",
-                error_message="La fecha debe seguir el formato AAAA-MM-DD.",
+                error_message="Formato de fecha inválido.",
                 back_url="/add",
             ), 400
 
-        if deadline_date < date.today():
+        if deadline_date < today:
             return render_template(
                 "error.html",
                 error_message="No puedes programar tareas en fechas pasadas.",
@@ -195,16 +210,27 @@ def add_task():
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit_task(id):
-    """Handle editing an existing personal task."""
+    """Edita una tarea personal existente con validación de nombre duplicado."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     task = Task.query.filter_by(id=id, user_id=session["user_id"]).first_or_404()
+    today = date.today()
 
     if request.method == "POST":
-        task.title = request.form["title"]
+        new_title = request.form["title"].strip()
         task.subject = request.form["subject"].strip() or "General"
         deadline_str = request.form["deadline"].strip()
         task.estimated_time = int(request.form["estimated_time"])
+
+        if new_title != task.title:
+            duplicate = Task.query.filter_by(user_id=session["user_id"], title=new_title).first()
+            if duplicate:
+                return render_template(
+                    "error.html",
+                    error_message="Ya tienes otra tarea personal con este mismo nombre.",
+                    back_url=f"/edit/{id}",
+                ), 400
+        task.title = new_title
 
         try:
             task.deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
@@ -215,7 +241,7 @@ def edit_task(id):
                 back_url=f"/edit/{id}",
             ), 400
 
-        if task.deadline < date.today():
+        if task.deadline < today:
             return render_template(
                 "error.html",
                 error_message="No puedes poner fechas pasadas.",
@@ -366,7 +392,7 @@ def join_class():
 
 @app.route("/class/<int:class_id>")
 def view_class(class_id):
-    """View classroom workspace, ordered tasks, and expired ones."""
+    """Visualiza el espacio de trabajo de una clase específica con búsqueda y filtros."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     user = User.query.get(session["user_id"])
@@ -376,9 +402,17 @@ def view_class(class_id):
         return redirect(url_for("classes_dashboard"))
 
     today = date.today()
-    pending_tasks = ClassTask.query.filter_by(
+    priority = request.args.get("priority")
+    search = request.args.get("search", "").strip()
+
+    q = ClassTask.query.filter_by(
         classroom_id=classroom.id, completed=False
-    ).filter(ClassTask.deadline >= today).order_by(ClassTask.deadline.asc()).all()
+    ).filter(ClassTask.deadline >= today)
+
+    if priority in ["Alta", "Media", "Baja"]:
+        q = q.filter_by(priority=priority)
+    if search:
+        q = q.filter(ClassTask.title.ilike(f"%{search}%"))
 
     expired_tasks = ClassTask.query.filter_by(
         classroom_id=classroom.id, completed=False
@@ -393,12 +427,14 @@ def view_class(class_id):
     return render_template(
         "classroom.html",
         classroom=classroom,
-        tasks=pending_tasks,
+        tasks=q.order_by(ClassTask.deadline.asc()).all(),
         expired_tasks=expired_tasks,
         completed_tasks=completed_tasks,
         today=today,
         is_creator=is_creator,
         current_user_id=user.id,
+        current_filter=priority,
+        search_query=search,
     )
 
 
@@ -432,7 +468,7 @@ def remove_member(class_id, user_id):
 
 @app.route("/class/<int:class_id>/add", methods=["POST"])
 def add_class_task(class_id):
-    """Add a shared task to classroom with strict date validation."""
+    """Añade una tarea compartida a la clase validando que no se repita el nombre en la clase."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     user = User.query.get(session["user_id"])
@@ -441,10 +477,19 @@ def add_class_task(class_id):
     if classroom.creator_id != user.id and classroom not in user.enrolled_classes:
         return redirect(url_for("classes_dashboard"))
 
-    title = request.form["title"]
+    title = request.form["title"].strip()
     subject = request.form["subject"].strip() or "General"
     deadline_str = request.form["deadline"].strip()
     estimated_time = int(request.form["estimated_time"])
+    today = date.today()
+
+    existing_class_task = ClassTask.query.filter_by(classroom_id=classroom.id, title=title).first()
+    if existing_class_task:
+        return render_template(
+            "error.html",
+            error_message="Ya existe una tarea con ese nombre en esta clase.",
+            back_url=f"/class/{class_id}",
+        ), 400
 
     try:
         deadline_date = datetime.strptime(deadline_str, "%Y-%m-%d").date()
@@ -455,10 +500,10 @@ def add_class_task(class_id):
             back_url=f"/class/{class_id}",
         ), 400
 
-    if deadline_date < date.today():
+    if deadline_date < today:
         return render_template(
             "error.html",
-            error_message="No puedes programar tareas en fechas pasadas para la clase.",
+            error_message="No puedes programar fechas pasadas.",
             back_url=f"/class/{class_id}",
         ), 400
 
@@ -480,20 +525,31 @@ def add_class_task(class_id):
 
 @app.route("/class/task-edit/<int:task_id>", methods=["GET", "POST"])
 def edit_class_task(task_id):
-    """Allow only task author or room creator to edit class task safely."""
+    """Edita una tarea de clase validando nombres duplicados."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     task = ClassTask.query.get_or_404(task_id)
     classroom = Classroom.query.get_or_404(task.classroom_id)
+    today = date.today()
 
     if classroom.creator_id != session["user_id"] and task.user_id != session["user_id"]:
         return redirect(url_for("view_class", class_id=classroom.id))
 
     if request.method == "POST":
-        task.title = request.form["title"]
+        new_title = request.form["title"].strip()
         task.subject = request.form["subject"].strip() or "General"
         deadline_str = request.form["deadline"].strip()
         task.estimated_time = int(request.form["estimated_time"])
+
+        if new_title != task.title:
+            duplicate = ClassTask.query.filter_by(classroom_id=classroom.id, title=new_title).first()
+            if duplicate:
+                return render_template(
+                    "error.html",
+                    error_message="Ya existe otra tarea con ese nombre en esta clase.",
+                    back_url=f"/class/task-edit/{task_id}",
+                ), 400
+        task.title = new_title
 
         try:
             task.deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
@@ -504,7 +560,7 @@ def edit_class_task(task_id):
                 back_url=f"/class/task-edit/{task_id}",
             ), 400
 
-        if task.deadline < date.today():
+        if task.deadline < today:
             return render_template(
                 "error.html",
                 error_message="No puedes poner fechas pasadas.",
@@ -515,7 +571,7 @@ def edit_class_task(task_id):
         db.session.commit()
         return redirect(url_for("view_class", class_id=classroom.id))
 
-    return render_template("edit_class_task.html", task=task, classroom=classroom)
+    return render_template("edit_task.html", task=task)
 
 
 @app.route("/class/task-complete/<int:task_id>")
@@ -535,14 +591,18 @@ def complete_class_task(task_id):
 
 @app.route("/class/task-delete/<int:task_id>")
 def delete_class_task(task_id):
-    """Delete class task with strict permission check."""
+    """Elimina una tarea de clase con restricción para completadas (solo creador)."""
     if "user_id" not in session:
         return redirect(url_for("login"))
     task = ClassTask.query.get_or_404(task_id)
     classroom = Classroom.query.get_or_404(task.classroom_id)
     class_id = task.classroom_id
+    is_creator = classroom.creator_id == session["user_id"]
 
-    if classroom.creator_id == session["user_id"] or task.user_id == session["user_id"]:
+    can_delete_completed = task.completed and is_creator
+    can_delete_pending = not task.completed and (is_creator or task.user_id == session["user_id"])
+
+    if can_delete_completed or can_delete_pending:
         db.session.delete(task)
         db.session.commit()
 
