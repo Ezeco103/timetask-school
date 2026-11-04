@@ -8,6 +8,7 @@ import string
 import edge_tts
 from flask import Flask, redirect, render_template, request, session, url_for
 from models import ClassTask, Classroom, Task, User, db
+from sqlalchemy import case
 
 app = Flask(__name__)
 app.secret_key = "timetask_school_final_key"
@@ -44,6 +45,27 @@ def generate_class_code():
     """Generate a random 6-character alphanumeric code for classrooms."""
     letters_digits = string.ascii_uppercase + string.digits
     return "".join(random.choice(letters_digits) for _ in range(6))
+
+
+def format_spanish_date(d):
+    """Convierte una fecha en un string formateado completamente en español."""
+    if not d:
+        return "Sin fecha"
+    dias = {
+        0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves",
+        4: "Viernes", 5: "Sábado", 6: "Domingo"
+    }
+    meses = {
+        1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+        5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+        9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+    }
+    try:
+        dia_semana = dias[d.weekday()]
+        mes = meses[d.month]
+        return f"{dia_semana}, {d.day} de {mes} de {d.year}"
+    except Exception:
+        return str(d)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -122,7 +144,14 @@ def index():
             Task.title.ilike(f"%{search_query}%")
         )
 
-    pending_tasks = pending_query.order_by(Task.deadline.asc()).all()
+    priority_order = case(
+        (Task.priority == 'Alta', 1),
+        (Task.priority == 'Media', 2),
+        (Task.priority == 'Baja', 3),
+        else_=4
+    )
+
+    pending_tasks = pending_query.order_by(Task.deadline.asc(), priority_order).all()
 
     expired_tasks = Task.query.filter_by(
         user_id=user.id, completed=False
@@ -152,6 +181,7 @@ def index():
         total_tasks=total_tasks,
         total_completed=total_completed,
         progress_percentage=progress_percentage,
+        format_date=format_spanish_date,
     )
 
 
@@ -328,7 +358,6 @@ def delete_task(id):
 
 # --- RUTAS DE CLASES ---
 
-
 @app.route("/classes")
 def classes_dashboard():
     """Render list of classes and handle invalid code notification."""
@@ -424,10 +453,17 @@ def view_class(class_id):
 
     is_creator = classroom.creator_id == user.id
 
+    priority_order = case(
+        (ClassTask.priority == 'Alta', 1),
+        (ClassTask.priority == 'Media', 2),
+        (ClassTask.priority == 'Baja', 3),
+        else_=4
+    )
+
     return render_template(
         "classroom.html",
         classroom=classroom,
-        tasks=q.order_by(ClassTask.deadline.asc()).all(),
+        tasks=q.order_by(ClassTask.deadline.asc(), priority_order).all(),
         expired_tasks=expired_tasks,
         completed_tasks=completed_tasks,
         today=today,
@@ -435,6 +471,7 @@ def view_class(class_id):
         current_user_id=user.id,
         current_filter=priority,
         search_query=search,
+        format_date=format_spanish_date,
     )
 
 

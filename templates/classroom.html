@@ -37,7 +37,7 @@
         }
 
         [data-theme="dark"] input {
-            background-color: #374151;
+            background-color: #4151;
             color: #fff;
             border-color: #4b5563;
         }
@@ -167,7 +167,6 @@
             gap: 8px;
         }
 
-        /* Recuadro rojo con pulso para hoy y mañana */
         .task-item-urgent {
             background: #fff5f5;
             border: 2px solid #ef4444;
@@ -209,10 +208,29 @@
             font-size: 12px;
         }
 
+        /* Colores dinámicos para las prioridades */
         .badge-alta {
             color: #dc2626;
             font-weight: bold;
             background: #fee2e2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-media {
+            color: #d97706;
+            font-weight: bold;
+            background: #fef3c7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-baja {
+            color: #059669;
+            font-weight: bold;
+            background: #d1fae5;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
@@ -363,7 +381,6 @@
             {% endif %}
         </div>
 
-        <!-- BARRA DE BÚSQUEDA Y FILTROS DE PRIORIDAD -->
         <div class="card-box" style="padding: 15px;">
             <form method="GET" action="/class/{{ classroom.id }}">
                 <input type="text" name="search" placeholder="🔍 Buscar tarea en la clase..." value="{{ search_query }}"
@@ -400,10 +417,27 @@
 
         <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;">
 
-        <!-- TAREAS PENDIENTES DE CLASE -->
+        <!-- TAREAS PENDIENTES DE CLASE (Agrupadas por fecha en español y con colores de prioridad) -->
         <h3>Tareas pendientes de la clase (Ordenadas por urgencia):</h3>
+        {% set grouped_tasks = {} %}
+        {% for task in tasks %}
+        {% set date_str = format_date(task.deadline) if format_date else (task.deadline.strftime('%Y-%m-%d') if
+        task.deadline else 'Sin fecha') %}
+        {% if date_str not in grouped_tasks %}
+        {% set _ = grouped_tasks.update({date_str: []}) %}
+        {% endif %}
+        {% set _ = grouped_tasks[date_str].append(task) %}
+        {% endfor %}
+
+        {% if grouped_tasks %}
+        {% for date_heading, task_list in grouped_tasks.items() %}
+        <div
+            style="margin-top: 20px; margin-bottom: 8px; border-bottom: 2px solid var(--primary); padding-bottom: 4px;">
+            <h4 style="color: var(--primary); margin: 0; font-size: 16px; text-transform: capitalize;">📅 {{
+                date_heading }}</h4>
+        </div>
         <ul>
-            {% for task in tasks %}
+            {% for task in task_list %}
             {% set days_diff = (task.deadline - today).days %}
             <li class="task-item {% if days_diff <= 1 %}task-item-urgent{% endif %}">
                 <div class="task-info">
@@ -411,7 +445,13 @@
                         <span class="badge-subject">{{ task.subject }}</span>
                         <strong style="margin-left: 8px;">{{ task.title }}</strong>
                     </div>
-                    <span class="badge-alta">{{ task.priority }}</span>
+                    {% if task.priority == 'Alta' %}
+                    <span class="badge-alta">Alta</span>
+                    {% elif task.priority == 'Media' %}
+                    <span class="badge-media">Media</span>
+                    {% else %}
+                    <span class="badge-baja">Baja</span>
+                    {% endif %}
                 </div>
                 <div
                     style="font-size: 13px; color: #6b7280; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -436,11 +476,15 @@
                     profesor pueden modificar esta tarea.</div>
                 {% endif %}
             </li>
-            {% else %}
-            <li style="color: #6b7280; font-style: italic; font-size: 14px;">No hay tareas pendientes en esta clase.
-            </li>
             {% endfor %}
         </ul>
+        {% endfor %}
+        {% else %}
+        <ul>
+            <li style="color: #6b7280; font-style: italic; font-size: 14px;">No hay tareas pendientes en esta clase.
+            </li>
+        </ul>
+        {% endif %}
 
         <h3 style="color: #dc2626; margin-top: 25px;">Tareas vencidas de la clase:</h3>
         <ul>
